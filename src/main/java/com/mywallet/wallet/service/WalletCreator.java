@@ -12,16 +12,22 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mywallet.wallet.entity.AccountKind;
 import com.mywallet.wallet.entity.WalletAccount;
 import com.mywallet.wallet.repository.WalletAccountRepository;
+import com.mywallet.wallet.repository.WalletLinkAttemptRepository;
 
 @Component
 @Transactional
 public class WalletCreator {
 
 	private final WalletAccountRepository walletAccountRepository;
+	private final WalletLinkAttemptRepository linkAttemptRepository;
 	private final Clock clock;
 
-	public WalletCreator(WalletAccountRepository walletAccountRepository, Clock clock) {
+	public WalletCreator(
+			WalletAccountRepository walletAccountRepository,
+			WalletLinkAttemptRepository linkAttemptRepository,
+			Clock clock) {
 		this.walletAccountRepository = walletAccountRepository;
+		this.linkAttemptRepository = linkAttemptRepository;
 		this.clock = clock;
 	}
 
@@ -31,14 +37,18 @@ public class WalletCreator {
 				.filter(account -> account.getKind() == AccountKind.USER);
 	}
 
-	public WalletOpen createIfAbsent(UUID userId) {
-		Optional<WalletAccount> existing = findUserWallet(userId);
-		if (existing.isPresent()) {
-			return new WalletOpen(existing.get(), false);
-		}
+	@Transactional(readOnly = true)
+	public boolean bankAccountTaken(String accountNumber) {
+		return walletAccountRepository.countByTrimmedBankAccountNumber(accountNumber) > 0;
+	}
+
+	public WalletAccount createLinked(UUID userId, String accountNumber, UUID linkId) {
 		Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
-		WalletAccount wallet = WalletAccount.newUserWallet(UUID.randomUUID(), userId, now);
-		return new WalletOpen(walletAccountRepository.saveAndFlush(wallet), true);
+		WalletAccount wallet = WalletAccount.newUserWallet(UUID.randomUUID(), userId, accountNumber, now);
+		WalletAccount saved = walletAccountRepository.saveAndFlush(wallet);
+		linkAttemptRepository.deleteById(linkId);
+		linkAttemptRepository.flush();
+		return saved;
 	}
 
 }

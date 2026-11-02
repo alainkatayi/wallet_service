@@ -38,6 +38,10 @@ public class WalletAccount implements Persistable<UUID> {
 	@Column(name = "user_id", unique = true, updatable = false)
 	private UUID userId;
 
+	@JdbcTypeCode(SqlTypes.CHAR)
+	@Column(name = "bank_account_number", unique = true, length = 12, updatable = false)
+	private String bankAccountNumber;
+
 	@Column(name = "balance", nullable = false, precision = 19, scale = 2)
 	private BigDecimal balance;
 
@@ -63,10 +67,11 @@ public class WalletAccount implements Persistable<UUID> {
 		this.newEntity = false;
 	}
 
-	private WalletAccount(UUID id, UUID userId, Instant now) {
+	private WalletAccount(UUID id, UUID userId, String bankAccountNumber, Instant now) {
 		this.id = id;
 		this.kind = AccountKind.USER;
 		this.userId = userId;
+		this.bankAccountNumber = bankAccountNumber;
 		this.balance = new BigDecimal("0.00");
 		this.currency = "CDF";
 		this.status = WalletStatus.ACTIVE;
@@ -74,8 +79,8 @@ public class WalletAccount implements Persistable<UUID> {
 		this.newEntity = true;
 	}
 
-	public static WalletAccount newUserWallet(UUID id, UUID userId, Instant now) {
-		return new WalletAccount(id, userId, now);
+	public static WalletAccount newUserWallet(UUID id, UUID userId, String bankAccountNumber, Instant now) {
+		return new WalletAccount(id, userId, bankAccountNumber, now);
 	}
 
 	@Override
@@ -100,6 +105,10 @@ public class WalletAccount implements Persistable<UUID> {
 
 	public UUID getUserId() {
 		return userId;
+	}
+
+	public String getBankAccountNumber() {
+		return bankAccountNumber;
 	}
 
 	public BigDecimal getBalance() {

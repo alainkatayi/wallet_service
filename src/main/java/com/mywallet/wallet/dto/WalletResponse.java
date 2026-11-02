@@ -15,7 +15,8 @@ public record WalletResponse(
 		@JsonFormat(shape = JsonFormat.Shape.STRING) BigDecimal balance,
 		String currency,
 		WalletStatus status,
-		Instant createdAt) {
+		Instant createdAt,
+		String accountNumber) {
 
 	public static WalletResponse from(WalletAccount account) {
 		return new WalletResponse(
@@ -23,7 +24,19 @@ public record WalletResponse(
 				account.getBalance().setScale(2, RoundingMode.UNNECESSARY),
 				account.getCurrency().trim(),
 				account.getStatus(),
-				account.getCreatedAt());
+				account.getCreatedAt(),
+				mask(account.getBankAccountNumber()));
+	}
+
+	private static String mask(String accountNumber) {
+		if (accountNumber == null) {
+			return null;
+		}
+		String digits = accountNumber.trim();
+		if (digits.length() <= 4) {
+			return digits;
+		}
+		return "*".repeat(digits.length() - 4) + digits.substring(digits.length() - 4);
 	}
 
 }

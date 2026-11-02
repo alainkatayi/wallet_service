@@ -1,10 +1,26 @@
 # Comment tester à la main
 # 1. docker compose up -d, puis mvnw.cmd spring-boot:run (port 8082, Postgres sur localhost:5434).
-# 2. Démarrer le user-service sur le port 8081, avec app.jwt.issuer=http://localhost:8081. S'inscrire, puis se connecter.
-# 3. POST /api/wallets/me : 201, Location: /api/wallets/me, balance "0.00", currency CDF, status ACTIVE.
-# 4. Renvoyer ce POST : 200 et le même corps. GET /api/wallets/me : 200, y compris si le wallet est FROZEN ou CLOSED.
-# 5. Sans jeton, jeton expiré, mauvais issuer ou sub qui n'est pas un UUID : 401, code UNAUTHENTICATED.
-# 6. GET /actuator/health sans jeton : 200. Toute autre route : refusée.
+# 2. user-service sur http://localhost:8081 : s'inscrire (téléphone identique à celui du compte bancaire), puis se connecter.
+# 3. Banque sur http://localhost:9081, Keycloak sur http://localhost:8180.
+# 4. POST /api/wallets/link/initiate : 202 { linkId, expiresIn }. Aucun wallet tant que le code n'est pas confirmé.
+# 5. Lire le code dans Mailpit : http://localhost:8025. Si aucun mail, le compte ou le téléphone ne correspondent pas (la banque répond quand même 202).
+# 6. POST /api/wallets/link/confirm : 201, Location /api/wallets/me, balance "0.00", accountNumber masqué (8 cachés, 4 visibles).
+# 7. GET /api/wallets/me : 200 avec le même masque. Un nouvel initiate : 409 WALLET_ALREADY_EXISTS.
+# 8. 6e initiate dans l'heure : 429 et Retry-After. Code faux ou linkId d'un autre utilisateur : 400 INVALID_LINK_CODE.
+# 9. Sans jeton : 401 UNAUTHENTICATED. GET /actuator/health sans jeton : 200.
+
+### Inscription user-service
+POST http://localhost:8081/api/auth/register
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "ada@example.com",
+  "password": "Motdepasse1",
+  "firstName": "Ada",
+  "lastName": "Lovelace",
+  "phone": "+243810000001"
+}
 
 ### Connexion user-service (récupère le jeton)
 POST http://localhost:8081/api/auth/login
@@ -20,15 +36,30 @@ Accept: application/json
 client.global.set("accessToken", response.body.accessToken);
 %}
 
-### Créer mon wallet
-POST http://localhost:8082/api/wallets/me
+### Initier la liaison
+POST http://localhost:8082/api/wallets/link/initiate
 Authorization: Bearer {{accessToken}}
+Content-Type: application/json
 Accept: application/json
 
-### Créer encore (déjà existant)
-POST http://localhost:8082/api/wallets/me
+{
+  "accountNumber": "000000000000"
+}
+
+> {%
+client.global.set("linkId", response.body.linkId);
+%}
+
+### Confirmer la liaison (code lu dans http://localhost:8025)
+POST http://localhost:8082/api/wallets/link/confirm
 Authorization: Bearer {{accessToken}}
+Content-Type: application/json
 Accept: application/json
+
+{
+  "linkId": "{{linkId}}",
+  "code": "123456"
+}
 
 ### Lire mon wallet
 GET http://localhost:8082/api/wallets/me
