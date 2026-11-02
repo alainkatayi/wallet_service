@@ -1,0 +1,36 @@
+# Comment tester à la main
+# 1. docker compose up -d, puis mvnw.cmd spring-boot:run (port 8082, Postgres sur localhost:5434).
+# 2. Démarrer le user-service sur le port 8081, avec app.jwt.issuer=http://localhost:8081. S'inscrire, puis se connecter.
+# 3. POST /api/wallets/me : 201, Location: /api/wallets/me, balance "0.00", currency CDF, status ACTIVE.
+# 4. Renvoyer ce POST : 200 et le même corps. GET /api/wallets/me : 200, y compris si le wallet est FROZEN ou CLOSED.
+# 5. Sans jeton, jeton expiré, mauvais issuer ou sub qui n'est pas un UUID : 401, code UNAUTHENTICATED.
+# 6. GET /actuator/health sans jeton : 200. Toute autre route : refusée.
+
+### Connexion user-service (récupère le jeton)
+POST http://localhost:8081/api/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "ada@example.com",
+  "password": "Motdepasse1"
+}
+
+> {%
+client.global.set("accessToken", response.body.accessToken);
+%}
+
+### Créer mon wallet
+POST http://localhost:8082/api/wallets/me
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+### Créer encore (déjà existant)
+POST http://localhost:8082/api/wallets/me
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+### Lire mon wallet
+GET http://localhost:8082/api/wallets/me
+Authorization: Bearer {{accessToken}}
+Accept: application/json
