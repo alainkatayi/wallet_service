@@ -45,6 +45,16 @@ public class GlobalExceptionHandler {
 		return problem(HttpStatus.CONFLICT, "Conflit", "Un wallet existe déjà.", "WALLET_ALREADY_EXISTS", request);
 	}
 
+	@ExceptionHandler(IdempotencyConflictException.class)
+	public ProblemDetail handleIdempotencyConflict(HttpServletRequest request) {
+		return problem(
+				HttpStatus.CONFLICT,
+				"Conflit",
+				"Cette référence est déjà utilisée.",
+				"IDEMPOTENCY_CONFLICT",
+				request);
+	}
+
 	@ExceptionHandler(AccountAlreadyLinkedException.class)
 	public ProblemDetail handleAccountAlreadyLinked(HttpServletRequest request) {
 		return problem(HttpStatus.CONFLICT, "Conflit", "Ce compte est déjà lié.", "ACCOUNT_ALREADY_LINKED", request);

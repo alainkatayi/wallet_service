@@ -51,6 +51,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 						.requestMatchers("/api/wallets/**").authenticated()
+						.requestMatchers(HttpMethod.GET, "/internal/wallets/*").permitAll()
+						.requestMatchers(HttpMethod.POST, "/internal/wallets/*/credit").permitAll()
 						.requestMatchers("/internal/**").denyAll()
 						.anyRequest().denyAll())
 				.oauth2ResourceServer(oauth2 -> oauth2

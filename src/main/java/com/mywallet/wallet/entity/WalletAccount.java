@@ -115,6 +115,16 @@ public class WalletAccount implements Persistable<UUID> {
 		return balance;
 	}
 
+	public BigDecimal credit(BigDecimal amount) {
+		balance = balance.add(amount);
+		return balance;
+	}
+
+	public BigDecimal debit(BigDecimal amount) {
+		balance = balance.subtract(amount);
+		return balance;
+	}
+
 	public String getCurrency() {
 		return currency;
 	}
