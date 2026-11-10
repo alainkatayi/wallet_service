@@ -53,6 +53,8 @@ public class SecurityConfig {
 						.requestMatchers("/api/wallets/**").authenticated()
 						.requestMatchers(HttpMethod.GET, "/internal/wallets/*").permitAll()
 						.requestMatchers(HttpMethod.POST, "/internal/wallets/*/credit").permitAll()
+						.requestMatchers(HttpMethod.POST, "/internal/wallets/*/debit").permitAll()
+						.requestMatchers(HttpMethod.POST, "/internal/wallets/*/reverse").permitAll()
 						.requestMatchers("/internal/**").denyAll()
 						.anyRequest().denyAll())
 				.oauth2ResourceServer(oauth2 -> oauth2
@@ -103,5 +105,4 @@ public class SecurityConfig {
 			return new JwtAuthenticationToken(jwt, List.of(), jwt.getSubject());
 		};
 	}
-
 }

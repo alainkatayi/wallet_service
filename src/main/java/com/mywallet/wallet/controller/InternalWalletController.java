@@ -14,6 +14,7 @@ import com.mywallet.wallet.dto.InternalWalletResponse;
 import com.mywallet.wallet.dto.MovementResponse;
 import com.mywallet.wallet.exception.WalletNotFoundException;
 import com.mywallet.wallet.service.WalletCreditService;
+import com.mywallet.wallet.service.WalletDebitService;
 import com.mywallet.wallet.service.WalletService;
 
 import tools.jackson.databind.JsonNode;
@@ -24,11 +25,17 @@ public class InternalWalletController {
 	private final InternalApiKey apiKey;
 	private final WalletService wallets;
 	private final WalletCreditService credits;
+	private final WalletDebitService debits;
 
-	public InternalWalletController(InternalApiKey apiKey, WalletService wallets, WalletCreditService credits) {
+	public InternalWalletController(
+			InternalApiKey apiKey,
+			WalletService wallets,
+			WalletCreditService credits,
+			WalletDebitService debits) {
 		this.apiKey = apiKey;
 		this.wallets = wallets;
 		this.credits = credits;
+		this.debits = debits;
 	}
 
 	@GetMapping("/internal/wallets/{userId}")
@@ -46,6 +53,24 @@ public class InternalWalletController {
 			@RequestBody(required = false) JsonNode body) {
 		apiKey.check(key);
 		return credits.credit(userId(userId), body);
+	}
+
+	@PostMapping("/internal/wallets/{userId}/debit")
+	public MovementResponse debit(
+			@PathVariable String userId,
+			@RequestHeader(value = "X-Internal-Key", required = false) String key,
+			@RequestBody(required = false) JsonNode body) {
+		apiKey.check(key);
+		return debits.debit(userId(userId), body);
+	}
+
+	@PostMapping("/internal/wallets/{userId}/reverse")
+	public MovementResponse reverse(
+			@PathVariable String userId,
+			@RequestHeader(value = "X-Internal-Key", required = false) String key,
+			@RequestBody(required = false) JsonNode body) {
+		apiKey.check(key);
+		return debits.reverse(userId(userId), body);
 	}
 
 	private static UUID userId(String userId) {

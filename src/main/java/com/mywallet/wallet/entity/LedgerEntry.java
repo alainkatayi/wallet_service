@@ -61,6 +61,7 @@ public class LedgerEntry implements Persistable<UUID> {
 			UUID id,
 			UUID accountId,
 			String transactionRef,
+			EntryType entryType,
 			Direction direction,
 			BigDecimal amount,
 			BigDecimal balanceAfter,
@@ -68,7 +69,7 @@ public class LedgerEntry implements Persistable<UUID> {
 		this.id = id;
 		this.accountId = accountId;
 		this.transactionRef = transactionRef;
-		this.entryType = EntryType.TOPUP;
+		this.entryType = entryType;
 		this.direction = direction;
 		this.amount = amount;
 		this.balanceAfter = balanceAfter;
@@ -83,7 +84,7 @@ public class LedgerEntry implements Persistable<UUID> {
 			BigDecimal amount,
 			BigDecimal balanceAfter,
 			Instant createdAt) {
-		return new LedgerEntry(id, accountId, transactionRef, Direction.CREDIT, amount, balanceAfter, createdAt);
+		return new LedgerEntry(id, accountId, transactionRef, EntryType.TOPUP, Direction.CREDIT, amount, balanceAfter, createdAt);
 	}
 
 	public static LedgerEntry topupDebit(
@@ -93,7 +94,38 @@ public class LedgerEntry implements Persistable<UUID> {
 			BigDecimal amount,
 			BigDecimal balanceAfter,
 			Instant createdAt) {
-		return new LedgerEntry(id, accountId, transactionRef, Direction.DEBIT, amount, balanceAfter, createdAt);
+		return new LedgerEntry(id, accountId, transactionRef, EntryType.TOPUP, Direction.DEBIT, amount, balanceAfter, createdAt);
+	}
+
+	public static LedgerEntry withdrawDebit(
+			UUID id,
+			UUID accountId,
+			String transactionRef,
+			BigDecimal amount,
+			BigDecimal balanceAfter,
+			Instant createdAt) {
+		return new LedgerEntry(id, accountId, transactionRef, EntryType.WITHDRAW, Direction.DEBIT, amount, balanceAfter, createdAt);
+	}
+
+	public static LedgerEntry withdrawCredit(
+			UUID id,
+			UUID accountId,
+			String transactionRef,
+			BigDecimal amount,
+			BigDecimal balanceAfter,
+			Instant createdAt) {
+		return new LedgerEntry(id, accountId, transactionRef, EntryType.WITHDRAW, Direction.CREDIT, amount, balanceAfter, createdAt);
+	}
+
+	public static LedgerEntry reversal(
+			UUID id,
+			UUID accountId,
+			String transactionRef,
+			Direction direction,
+			BigDecimal amount,
+			BigDecimal balanceAfter,
+			Instant createdAt) {
+		return new LedgerEntry(id, accountId, transactionRef, EntryType.REVERSAL, direction, amount, balanceAfter, createdAt);
 	}
 
 	@Override
