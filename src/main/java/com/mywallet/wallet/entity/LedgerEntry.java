@@ -128,6 +128,26 @@ public class LedgerEntry implements Persistable<UUID> {
 		return new LedgerEntry(id, accountId, transactionRef, EntryType.REVERSAL, direction, amount, balanceAfter, createdAt);
 	}
 
+	public static LedgerEntry transferDebit(
+			UUID id,
+			UUID accountId,
+			String transactionRef,
+			BigDecimal amount,
+			BigDecimal balanceAfter,
+			Instant createdAt) {
+		return new LedgerEntry(id, accountId, transactionRef, EntryType.TRANSFER, Direction.DEBIT, amount, balanceAfter, createdAt);
+	}
+
+	public static LedgerEntry transferCredit(
+			UUID id,
+			UUID accountId,
+			String transactionRef,
+			BigDecimal amount,
+			BigDecimal balanceAfter,
+			Instant createdAt) {
+		return new LedgerEntry(id, accountId, transactionRef, EntryType.TRANSFER, Direction.CREDIT, amount, balanceAfter, createdAt);
+	}
+
 	@Override
 	public UUID getId() {
 		return id;
